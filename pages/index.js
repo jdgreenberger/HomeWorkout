@@ -1,10 +1,17 @@
 import React, { useState, useEffect } from "react";
-import { InputGroup, FormControl, Button, ListGroup } from "react-bootstrap";
+import {
+  InputGroup,
+  FormControl,
+  Button,
+  ListGroup,
+  ButtonGroup
+} from "react-bootstrap";
 
 const ActiveTimerView = ({ interval, rest, onStop, stopped, exercises }) => {
   const [exerciseIndex, setExerciseIndex] = useState(exercises.length - 1);
   const [isActive, setIsActive] = useState(false);
   const [secondsRemaining, setSecondsRemaining] = useState(interval);
+  const [pause, setPause] = useState(false);
   const speakMessage = () => {
     if (isActive) {
       const msg = new SpeechSynthesisUtterance("Rest");
@@ -24,6 +31,10 @@ const ActiveTimerView = ({ interval, rest, onStop, stopped, exercises }) => {
     }
   };
   const checkTimer = () => {
+    if (pause) {
+      setTimeout(() => checkTimer(), 1000);
+      return;
+    }
     if (secondsRemaining === 1) {
       speakMessage();
     } else {
@@ -38,18 +49,23 @@ const ActiveTimerView = ({ interval, rest, onStop, stopped, exercises }) => {
       return;
     }
     setTimeout(() => checkTimer(), 1000);
-  }, [secondsRemaining]);
+  }, [secondsRemaining, pause]);
   return (
     <div className="timer">
       <div>
         <h1>:{secondsRemaining}</h1>
       </div>
       <h2>{!rest || isActive ? exercises[exerciseIndex] : "REST"}</h2>
-      <InputGroup className="mb-3">
-        <Button variant="primary" onClick={onStop}>
-          Stop
-        </Button>
-      </InputGroup>
+      <div>
+        <ButtonGroup aria-label="Timer buttons">
+          <Button variant="secondary" onClick={() => setPause(!pause)}>
+            {pause ? "Start" : "Pause"}
+          </Button>
+          <Button variant="primary" onClick={onStop}>
+            Stop
+          </Button>
+        </ButtonGroup>
+      </div>
       <style jsx>{`
         .timer {
           display: flex;
@@ -93,44 +109,61 @@ const Home = () => {
         <FormControl
           value={currentExercise}
           onChange={e => setCurrentExercise(e.target.value)}
-          placeholder="Add Exercise"
+          placeholder="Add Exercise (ex. Squats)"
           aria-label="Exercise"
           aria-describedby="basic-addon2"
         />
         <InputGroup.Prepend>
           <Button
             variant="primary"
-            onClick={() => setExercises([...exercises, currentExercise])}
+            onClick={() => {
+              setCurrentExercise("");
+              setExercises([...exercises, currentExercise]);
+            }}
           >
             Add
           </Button>
         </InputGroup.Prepend>
       </InputGroup>
-      <InputGroup className="mb-3">
-        <ListGroup>
-          {exercises.map(e => (
-            <ListGroup.Item key={e}>{e}</ListGroup.Item>
-          ))}
-        </ListGroup>
-      </InputGroup>
+      <ListGroup>
+        {exercises.map(e => (
+          <InputGroup className="mb-3" key={e}>
+            <ListGroup.Item>{e}</ListGroup.Item>
+            <InputGroup.Prepend>
+              <Button
+                variant="danger"
+                onClick={() => {
+                  setExercises(exercises.filter(exercise => exercise !== e));
+                }}
+              >
+                X
+              </Button>
+            </InputGroup.Prepend>
+          </InputGroup>
+        ))}
+      </ListGroup>
       <InputGroup className="mb-3">
         <FormControl
           value={interval}
           onChange={e => setInterval(e.target.value)}
-          placeholder="Interval?"
+          placeholder="Timer Interval in seconds (ex. 45)"
           aria-label="Interval"
           aria-describedby="basic-addon2"
         />
         <FormControl
           value={rest}
           onChange={e => setRest(e.target.value)}
-          placeholder="Rest Time?"
+          placeholder="Optional Rest Time (ex. 15)"
           aria-label="Rest"
           aria-describedby="basic-addon2"
         />
       </InputGroup>
       <InputGroup className="mb-3">
-        <Button variant="primary" onClick={() => setStarted(true)}>
+        <Button
+          variant="primary"
+          onClick={() => setStarted(true)}
+          disabled={!exercises.length || !interval}
+        >
           Start
         </Button>
       </InputGroup>
