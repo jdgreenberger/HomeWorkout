@@ -7,11 +7,19 @@ import {
   ButtonGroup
 } from "react-bootstrap";
 
-const ActiveTimerView = ({ interval, rest, onStop, stopped, exercises }) => {
+const ActiveTimerView = ({
+  interval,
+  rest,
+  onStop,
+  stopped,
+  exercises,
+  numSets
+}) => {
   const [exerciseIndex, setExerciseIndex] = useState(exercises.length - 1);
   const [isActive, setIsActive] = useState(false);
   const [secondsRemaining, setSecondsRemaining] = useState(interval);
   const [pause, setPause] = useState(false);
+  const [setNum, setSetNum] = useState(0);
   const speakMessage = () => {
     if (isActive) {
       const msg = new SpeechSynthesisUtterance("Rest");
@@ -19,8 +27,20 @@ const ActiveTimerView = ({ interval, rest, onStop, stopped, exercises }) => {
       setIsActive(false);
       setSecondsRemaining(rest);
     } else {
-      const index =
-        exerciseIndex === exercises.length - 1 ? 0 : exerciseIndex + 1;
+      let index = exerciseIndex + 1;
+      if (exerciseIndex === exercises.length - 1) {
+        if (setNum === numSets) {
+          const msg = new SpeechSynthesisUtterance(
+            "You finished your workout! Good job!"
+          );
+          window.speechSynthesis.speak(msg);
+          onStop();
+          return;
+        } else {
+          setSetNum(setNum + 1);
+        }
+        index = 0;
+      }
       setExerciseIndex(index);
       const msg = new SpeechSynthesisUtterance(exercises[index]);
       window.speechSynthesis.speak(msg);
@@ -53,6 +73,9 @@ const ActiveTimerView = ({ interval, rest, onStop, stopped, exercises }) => {
   return (
     <div className="timer">
       <div>
+        <h1>Set Number {setNum}</h1>
+      </div>
+      <div>
         <h1>:{secondsRemaining}</h1>
       </div>
       <h2>{!rest || isActive ? exercises[exerciseIndex] : "REST"}</h2>
@@ -84,12 +107,14 @@ const Home = () => {
   const [currentExercise, setCurrentExercise] = useState();
   const [interval, setInterval] = useState("");
   const [rest, setRest] = useState("");
+  const [numSets, setNumSets] = useState(1);
   const [started, setStarted] = useState(false);
   if (started) {
     return (
       <ActiveTimerView
         stopped={!started}
         interval={Number(interval)}
+        numSets={Number(numSets)}
         rest={rest}
         onStop={() => setStarted(false)}
         exercises={exercises}
@@ -144,6 +169,13 @@ const Home = () => {
       </ListGroup>
       <InputGroup className="mb-3">
         <FormControl
+          value={numSets}
+          onChange={e => setNumSets(e.target.value)}
+          placeholder="Number of sets (ex. 3)"
+          aria-label="Sets"
+          aria-describedby="basic-addon2"
+        />
+        <FormControl
           value={interval}
           onChange={e => setInterval(e.target.value)}
           placeholder="Timer Interval in seconds (ex. 45)"
@@ -162,7 +194,7 @@ const Home = () => {
         <Button
           variant="primary"
           onClick={() => setStarted(true)}
-          disabled={!exercises.length || !interval}
+          disabled={!exercises.length || !interval || !numSets}
         >
           Start
         </Button>
