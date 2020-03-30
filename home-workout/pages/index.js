@@ -1,0 +1,147 @@
+import React, { useState, useEffect } from "react";
+import { InputGroup, FormControl, Button, ListGroup } from "react-bootstrap";
+
+const ActiveTimerView = ({ interval, rest, onStop, stopped, exercises }) => {
+  const [exerciseIndex, setExerciseIndex] = useState(exercises.length - 1);
+  const [isActive, setIsActive] = useState(false);
+  const [secondsRemaining, setSecondsRemaining] = useState(interval);
+  const speakMessage = () => {
+    if (isActive) {
+      const msg = new SpeechSynthesisUtterance("Rest");
+      window.speechSynthesis.speak(msg);
+      setIsActive(false);
+      setSecondsRemaining(rest);
+    } else {
+      const index =
+        exerciseIndex === exercises.length - 1 ? 0 : exerciseIndex + 1;
+      setExerciseIndex(index);
+      const msg = new SpeechSynthesisUtterance(exercises[index]);
+      window.speechSynthesis.speak(msg);
+      if (rest) {
+        setIsActive(true);
+      }
+      setSecondsRemaining(interval);
+    }
+  };
+  const checkTimer = () => {
+    if (secondsRemaining === 1) {
+      speakMessage();
+    } else {
+      setSecondsRemaining(remaining => remaining - 1);
+    }
+  };
+  useEffect(() => {
+    speakMessage();
+  }, []);
+  useEffect(() => {
+    if (stopped) {
+      return;
+    }
+    setTimeout(() => checkTimer(), 1000);
+  }, [secondsRemaining]);
+  return (
+    <div className="timer">
+      <div>
+        <h1>:{secondsRemaining}</h1>
+      </div>
+      <h2>{!rest || isActive ? exercises[exerciseIndex] : "REST"}</h2>
+      <InputGroup className="mb-3">
+        <Button variant="primary" onClick={onStop}>
+          Stop
+        </Button>
+      </InputGroup>
+      <style jsx>{`
+        .timer {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+        }
+        h1 {
+          fontsize: 46px;
+        }
+      `}</style>
+    </div>
+  );
+};
+const Home = () => {
+  const [exercises, setExercises] = useState([]);
+  const [currentExercise, setCurrentExercise] = useState();
+  const [interval, setInterval] = useState("");
+  const [rest, setRest] = useState("");
+  const [started, setStarted] = useState(false);
+  if (started) {
+    return (
+      <ActiveTimerView
+        stopped={!started}
+        interval={Number(interval)}
+        rest={rest}
+        onStop={() => setStarted(false)}
+        exercises={exercises}
+      />
+    );
+  }
+  return (
+    <div className="container">
+      <link
+        rel="stylesheet"
+        href="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+        integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh"
+        crossOrigin="anonymous"
+      />
+      <h1>Home Workout</h1>
+      <InputGroup className="mb-3">
+        <FormControl
+          value={currentExercise}
+          onChange={e => setCurrentExercise(e.target.value)}
+          placeholder="Add Exercise"
+          aria-label="Exercise"
+          aria-describedby="basic-addon2"
+        />
+        <InputGroup.Prepend>
+          <Button
+            variant="primary"
+            onClick={() => setExercises([...exercises, currentExercise])}
+          >
+            Add
+          </Button>
+        </InputGroup.Prepend>
+      </InputGroup>
+      <InputGroup className="mb-3">
+        <ListGroup>
+          {exercises.map(e => (
+            <ListGroup.Item key={e}>{e}</ListGroup.Item>
+          ))}
+        </ListGroup>
+      </InputGroup>
+      <InputGroup className="mb-3">
+        <FormControl
+          value={interval}
+          onChange={e => setInterval(e.target.value)}
+          placeholder="Interval?"
+          aria-label="Interval"
+          aria-describedby="basic-addon2"
+        />
+        <FormControl
+          value={rest}
+          onChange={e => setRest(e.target.value)}
+          placeholder="Rest Time?"
+          aria-label="Rest"
+          aria-describedby="basic-addon2"
+        />
+      </InputGroup>
+      <InputGroup className="mb-3">
+        <Button variant="primary" onClick={() => setStarted(true)}>
+          Start
+        </Button>
+      </InputGroup>
+      <style jsx>{`
+        h1 {
+          margin-top: 20px;
+          margin-bottom: 20px;
+        }
+      `}</style>
+    </div>
+  );
+};
+
+export default Home;
