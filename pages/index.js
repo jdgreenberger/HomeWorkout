@@ -83,10 +83,13 @@ const ActiveTimerView = ({
         <h2>{!rest || isActive ? exercises[exerciseIndex] : "REST"}</h2>
       </div>
       <ButtonGroup aria-label="Timer buttons">
-        <Button variant="secondary" onClick={() => setPause(!pause)}>
+        <Button
+          variant={pause ? "primary" : "secondary"}
+          onClick={() => setPause(!pause)}
+        >
           {pause ? "Start" : "Pause"}
         </Button>
-        <Button variant="primary" onClick={onStop}>
+        <Button variant="danger" onClick={onStop}>
           Stop
         </Button>
       </ButtonGroup>
