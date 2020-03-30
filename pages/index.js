@@ -16,6 +16,7 @@ const ActiveTimerView = ({
   numSets
 }) => {
   const [exerciseIndex, setExerciseIndex] = useState(exercises.length - 1);
+  // Keep track of rest/interval timers, only use when there is a rest period given
   const [isActive, setIsActive] = useState(false);
   const [secondsRemaining, setSecondsRemaining] = useState(interval);
   const [pause, setPause] = useState(false);
@@ -78,22 +79,23 @@ const ActiveTimerView = ({
       <div>
         <h1>:{secondsRemaining}</h1>
       </div>
-      <h2>{!rest || isActive ? exercises[exerciseIndex] : "REST"}</h2>
       <div>
-        <ButtonGroup aria-label="Timer buttons">
-          <Button variant="secondary" onClick={() => setPause(!pause)}>
-            {pause ? "Start" : "Pause"}
-          </Button>
-          <Button variant="primary" onClick={onStop}>
-            Stop
-          </Button>
-        </ButtonGroup>
+        <h2>{!rest || isActive ? exercises[exerciseIndex] : "REST"}</h2>
       </div>
+      <ButtonGroup aria-label="Timer buttons">
+        <Button variant="secondary" onClick={() => setPause(!pause)}>
+          {pause ? "Start" : "Pause"}
+        </Button>
+        <Button variant="primary" onClick={onStop}>
+          Stop
+        </Button>
+      </ButtonGroup>
       <style jsx>{`
         .timer {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
+          text-align: center;
+        }
+        .timer > div {
+          padding: 20px;
         }
         h1 {
           fontsize: 46px;
@@ -209,4 +211,17 @@ const Home = () => {
   );
 };
 
-export default Home;
+const Container = () => {
+  return (
+    <div>
+      <link
+        rel="stylesheet"
+        href="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+        integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh"
+        crossOrigin="anonymous"
+      />
+      <Home />
+    </div>
+  );
+};
+export default Container;
